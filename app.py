@@ -34,7 +34,16 @@ def home():
 
 @app.route('/robots.txt')
 def robots():
-    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'robots.txt')
+    try:
+        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'robots.txt')
+        with open(file_path, 'r') as f:
+            content = f.read()
+        return content, 200, {'Content-Type': 'text/plain'}
+    except Exception as e:
+        # если файл не найден или не читается, отдаём стандартное содержимое
+        print(f"Ошибка чтения robots.txt: {e}")
+        content = "User-agent: *\nAllow: /\nSitemap: https://yourdomain.com/sitemap.xml"
+        return content, 200, {'Content-Type': 'text/plain'}
 
 @app.route('/sitemap.xml')
 def sitemap():
