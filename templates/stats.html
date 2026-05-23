@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статистика посещений — Гармония</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        .stats-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        .stats-numbers {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            flex: 1;
+            text-align: center;
+            backdrop-filter: blur(4px);
+        }
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fbc2eb;
+        }
+        .stat-card .label {
+            margin-top: 0.5rem;
+            opacity: 0.7;
+        }
+        canvas {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="content stats-container">
+        <h1>📊 Статистика посещений</h1>
+
+        <div class="stats-numbers">
+            <div class="stat-card">
+                <div class="number" id="total-visits">—</div>
+                <div class="label">Всего заходов</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="today-visits">—</div>
+                <div class="label">Сегодня</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="yesterday-visits">—</div>
+                <div class="label">Вчера</div>
+            </div>
+        </div>
+
+        <h2>📈 За последние 7 дней</h2>
+        <canvas id="weeklyChart" width="400" height="200"></canvas>
+
+        <p style="margin-top:2rem; text-align:center;">
+            <a href="/" style="color:#d1c4e9;">← Вернуться на главную</a>
+        </p>
+    </div>
+
+    <script>
+        async function loadStats() {
+            try {
+                const resp = await fetch('/api/stats');
+                const data = await resp.json();
+
+                document.getElementById('total-visits').textContent = data.total;
+                document.getElementById('today-visits').textContent = data.today;
+                document.getElementById('yesterday-visits').textContent = data.yesterday;
+
+                const ctx = document.getElementById('weeklyChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.days,
+                        datasets: [{
+                            label: 'Посещений',
+                            data: data.counts,
+                            borderColor: '#fbc2eb',
+                            backgroundColor: 'rgba(251, 194, 235, 0.2)',
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255,255,255,0.1)' }
+                            },
+                            x: {
+                                grid: { color: 'rgba(255,255,255,0.1)' }
+                            }
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error('Ошибка загрузки статистики', e);
+            }
+        }
+        loadStats();
+    </script>
+</body>
+</html>

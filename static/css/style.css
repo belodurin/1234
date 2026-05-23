@@ -1,0 +1,216 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0a0f1a;
+    color: #e0e6f0;
+    overflow-x: hidden;
+    position: relative;
+    min-height: 100vh;
+}
+
+/* Калейдоскоп на весь фон */
+#kaleidoscope {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0.7;  /* Было 0.35, теперь ярче */
+}
+
+.content {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: rgba(10, 15, 26, 0.5);  /* Более прозрачный фон, чтобы калейдоскоп просвечивал */
+    backdrop-filter: blur(6px);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 2rem;
+}
+
+.live-info {
+    background: rgba(255,255,255,0.08);
+    padding: 0.5rem 1.2rem;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    backdrop-filter: blur(4px);
+}
+
+.online-dot {
+    width: 8px;
+    height: 8px;
+    background: #5f9;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px #5f9;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+.hero {
+    text-align: center;
+    margin: 4rem 0 3rem;
+}
+
+.hero h1 {
+    font-size: 3.5rem;
+    font-weight: 300;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+}
+
+.app-name {
+    font-weight: 700;
+    background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    font-size: 1.3rem;
+    font-weight: 300;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+}
+
+/* Обратный отсчёт */
+.countdown {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.countdown-item {
+    background: rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 1rem 1.5rem;
+    min-width: 80px;
+    backdrop-filter: blur(4px);
+    text-align: center;
+}
+
+.countdown-item span {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: #fbc2eb;
+}
+
+.countdown-item small {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.7;
+}
+
+.description, .about-stress, .cta {
+    margin: 3rem 0;
+}
+
+h2 {
+    font-size: 2rem;
+    font-weight: 400;
+    margin-bottom: 1.5rem;
+    color: #d1c4e9;
+}
+
+p {
+    line-height: 1.8;
+    margin-bottom: 1.2rem;
+    font-weight: 300;
+}
+
+.cta p {
+    text-align: center;
+}
+
+.subscribe-form {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.subscribe-form input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.9rem 1.2rem;
+    border: none;
+    border-radius: 40px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 1rem;
+    backdrop-filter: blur(4px);
+    outline: none;
+}
+
+.subscribe-form input::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+
+.subscribe-form button {
+    padding: 0.9rem 2rem;
+    border: none;
+    border-radius: 40px;
+    background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+    color: #0a0f1a;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.subscribe-form button:hover {
+    opacity: 0.9;
+}
+
+footer {
+    margin-top: auto;
+    text-align: center;
+    padding: 2rem 0 0;
+    opacity: 0.6;
+    font-size: 0.9rem;
+}
+
+footer a {
+    color: #d1c4e9;
+    text-decoration: none;
+    margin: 0 0.5rem;
+}
+
+@media (max-width: 600px) {
+    .hero h1 {
+        font-size: 2.2rem;
+    }
+    .countdown {
+        gap: 1rem;
+    }
+    .countdown-item span {
+        font-size: 2rem;
+    }
+}
