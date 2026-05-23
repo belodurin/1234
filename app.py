@@ -1,68 +1,34 @@
-import os
 import time
-import pymysql
 from datetime import datetime, timedelta
-from flask import Flask, render_template, send_from_directory, request, jsonify, g
+from collections import defaultdict
+from flask import Flask, render_template, send_from_directory, request, jsonify
+import os
 
 app = Flask(__name__)
 
-# ---------- Конфигурация MySQL ----------
-DB_CONFIG = {
-    'host': '78.108.80.125',
-    'user': 'u245369_umXh',
-    'password': os.environ.get('DB_PASSWORD', 'QtBdOGPU'),  # ← пароль в переменную окружения или прямо в коде
-    'database': 'b245369_YBCo',
-    'charset': 'utf8mb4',
-    'cursorclass': pymysql.cursors.DictCursor
-}
+# ---------- Хранилище в памяти ----------
+total_visits = 0
+daily_visits = defaultdict(int)  # ключ: 'YYYY-MM-DD'
+active_sessions = {}
 
-# ---------- работа с БД ----------
-def get_db():
-    if 'db' not in g:
-        g.db = pymysql.connect(**DB_CONFIG)
-    return g.db
-
-def init_db():
-    with app.app_context():
-        db = get_db()
-        with db.cursor() as cur:
-            cur.execute('''
-                CREATE TABLE IF NOT EXISTS visits (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    ip VARCHAR(45) NOT NULL,
-                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            ''')
-        db.commit()
-
-@app.teardown_appcontext
-def close_db(exception):
-    db = g.pop('db', None)
-    if db is not None:
-        db.close()
-
-# ---------- отслеживание активных сессий ----------
-active_sessions = {}  # {ip: последнее время активности}
-
-def update_active_session(ip):
+def update_online(ip):
     now = time.time()
     active_sessions[ip] = now
     cutoff = now - 300
-    for ip_addr in list(active_sessions.keys()):
-        if active_sessions[ip_addr] < cutoff:
-            del active_sessions[ip_addr]
+    for stored_ip in list(active_sessions.keys()):
+        if active_sessions[stored_ip] < cutoff:
+            del active_sessions[stored_ip]
 
 def record_visit(ip):
-    db = get_db()
-    with db.cursor() as cur:
-        cur.execute('INSERT INTO visits (ip) VALUES (%s)', (ip,))
-    db.commit()
+    global total_visits
+    total_visits += 1
+    today = datetime.now().strftime('%Y-%m-%d')
+    daily_visits[today] += 1
 
-# ---------- маршруты ----------
 @app.route('/')
 def home():
     ip = request.remote_addr
-    update_active_session(ip)
+    update_online(ip)
     record_visit(ip)
     return render_template('index.html')
 
@@ -87,39 +53,24 @@ def stats():
 
 @app.route('/api/stats')
 def api_stats():
-    db = get_db()
-    with db.cursor() as cur:
-        # общее количество посещений
-        cur.execute('SELECT COUNT(*) AS total FROM visits')
-        total = cur.fetchone()['total']
+    days_labels = []
+    counts = []
+    for i in range(6, -1, -1):
+        date = datetime.now() - timedelta(days=i)
+        day_str = date.strftime('%Y-%m-%d')
+        days_labels.append(date.strftime('%d.%m'))
+        counts.append(daily_visits.get(day_str, 0))
 
-        # сегодня и вчера
-        today = datetime.now().strftime('%Y-%m-%d')
-        yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-        cur.execute('SELECT COUNT(*) AS cnt FROM visits WHERE DATE(timestamp) = %s', (today,))
-        today_count = cur.fetchone()['cnt']
-        cur.execute('SELECT COUNT(*) AS cnt FROM visits WHERE DATE(timestamp) = %s', (yesterday,))
-        yesterday_count = cur.fetchone()['cnt']
-
-        # посещения по дням за последние 7 дней
-        days = []
-        counts = []
-        for i in range(6, -1, -1):
-            date = datetime.now() - timedelta(days=i)
-            day_str = date.strftime('%Y-%m-%d')
-            cur.execute('SELECT COUNT(*) AS cnt FROM visits WHERE DATE(timestamp) = %s', (day_str,))
-            cnt = cur.fetchone()['cnt']
-            days.append(date.strftime('%d.%m'))
-            counts.append(cnt)
+    today = datetime.now().strftime('%Y-%m-%d')
+    yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
 
     return jsonify({
-        'total': total,
-        'today': today_count,
-        'yesterday': yesterday_count,
-        'days': days,
+        'total': total_visits,
+        'today': daily_visits.get(today, 0),
+        'yesterday': daily_visits.get(yesterday, 0),
+        'days': days_labels,
         'counts': counts
     })
 
 if __name__ == '__main__':
-    init_db()
     app.run(debug=False, host='0.0.0.0', port=5000)
